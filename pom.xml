@@ -21,6 +21,8 @@
 	<properties>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<encoding>UTF-8</encoding>
 
 		<scala.version>2.11.11</scala.version>
@@ -74,7 +76,7 @@
 
 
 
-	<!-- Unsuccessful attempt to force m2e-scala plugin to use the correct scala 
+	<!-- Unsuccessful attempt to force m2e-scala plugin to use the correct scala
 		library container -->
 	<!-- <dependencies> -->
 	<!-- <dependency> -->
@@ -249,7 +251,7 @@
 				</exclusions>
 			</dependency>
 
-			<!-- <dependency> <groupId>org.aksw.jena-sparql-api</groupId> <artifactId>jena-sparql-api-core</artifactId> 
+			<!-- <dependency> <groupId>org.aksw.jena-sparql-api</groupId> <artifactId>jena-sparql-api-core</artifactId>
 				<version>${jsa.version}</version> </dependency> -->
 
 			<!-- Test -->
@@ -271,7 +273,7 @@
 				<version>${jena.version}</version>
 			</dependency>
 
-			<!-- Jena's (newer) vesion of jackson conflicts with hadoop's and causes 
+			<!-- Jena's (newer) vesion of jackson conflicts with hadoop's and causes
 				it to crash -->
 			<dependency>
 				<groupId>org.apache.jena</groupId>
@@ -293,11 +295,11 @@
 				</exclusions>
 			</dependency>
 
-			<!-- <dependency> <groupId>org.apache.jena</groupId> <artifactId>jena-sdb</artifactId> 
+			<!-- <dependency> <groupId>org.apache.jena</groupId> <artifactId>jena-sdb</artifactId>
 				<version>${jena.version}</version> </dependency> -->
 
 
-			<!-- <dependency> <groupId>org.apache.commons</groupId> <artifactId>commons-compress</artifactId> 
+			<!-- <dependency> <groupId>org.apache.commons</groupId> <artifactId>commons-compress</artifactId>
 				<version>1.15</version> </dependency> -->
 
 			<!-- Hadoop dependencies (mainly used for InputFormat definitions) -->
@@ -369,6 +371,28 @@
 				<groupId>com.amashchenko.maven.plugin</groupId>
 				<artifactId>gitflow-maven-plugin</artifactId>
 			</plugin>
+
+			<plugin>
+				<groupId>org.eluder.coveralls</groupId>
+				<artifactId>coveralls-maven-plugin</artifactId>
+				<version>4.3.0</version>
+			</plugin>
+
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>0.8.1</version>
+				<executions>
+					<execution>
+						<id>prepare-agent</id>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+
 
 		</plugins>
 
@@ -644,7 +668,7 @@
 
 
 	<distributionManagement>
-		<!-- <repository> <id>ossrh</id> <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url> 
+		<!-- <repository> <id>ossrh</id> <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
 			</repository> -->
 		<repository>
 			<id>maven.aksw.internal</id>

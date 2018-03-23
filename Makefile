@@ -1,2 +1,2 @@
 test:
-	mvn clean test
+	mvn clean test jacoco:report coveralls:report
