@@ -9,10 +9,13 @@ import org.apache.spark.sql.types.{LongType, StringType, StructField, StructType
 
 
 class TripleOps {
+
   var tripleFactTable : DataFrame = _
   var objectDF : DataFrame = _
   var predicateDF : DataFrame = _
   var subjectDF : DataFrame = _
+  var cache: Boolean = false;
+
   private val spark : SparkSession = SparkSession.builder().getOrCreate()
 
   /**
@@ -65,7 +68,7 @@ class TripleOps {
     * @return DataFrame Subject dictionary of [index,subject]
     */
   def getDistinctSubjectDictDF(triples : RDD[graph.Triple]) : DataFrame = {
-    spark.createDataFrame(triples.map(_.getSubject.toString()).distinct().zipWithIndex().map(t => Row(t._1, t._2)), dictionarySchema).cache()
+    spark.createDataFrame(triples.map(_.getSubject.toString()).distinct().zipWithIndex().map(t => Row(t._1, t._2)), dictionarySchema)
   }
 
   /**
@@ -74,7 +77,7 @@ class TripleOps {
     * @return DataFrame Predicate dictionary of [index,Prediate]
     */
   def getDistinctPredicateDictDF(triples : RDD[graph.Triple]) : DataFrame = {
-    spark.createDataFrame(triples.map(_.getPredicate.toString()).distinct().zipWithIndex().map(t => Row(t._1, t._2)), dictionarySchema).cache()
+    spark.createDataFrame(triples.map(_.getPredicate.toString()).distinct().zipWithIndex().map(t => Row(t._1, t._2)), dictionarySchema)
   }
 
   /**
@@ -83,7 +86,7 @@ class TripleOps {
     * @return DataFrame Object dictionary of [index , object]
     */
   def getDistinctObjectDictDF(triples : RDD[graph.Triple]) : DataFrame = {
-    spark.createDataFrame( triples.map(_.getObject.toString()).distinct().zipWithIndex().map(t => Row(t._1, t._2)), dictionarySchema).cache()
+    spark.createDataFrame( triples.map(_.getObject.toString()).distinct().zipWithIndex().map(t => Row(t._1, t._2)), dictionarySchema)
   }
 
 
@@ -101,17 +104,13 @@ class TripleOps {
   /**
     * This is key function of TripleOps that read RDF file and create Dictionaries and Index Table and register them as Spark In memory Table
     * @param input Input RDF File Path [Either One of the input is require]
-    * @param compressedDir Input compressed-directory Path to read compressed data directly [Either One of the input is require]
     * @param registerAsTable If true, it register all the DF as Spark table
     * @return Returns the Tuple4 [IndexDataFrame,SubjectDictDataFrame,ObjectDictDataFrame,PredicateDictDataFrame]
     */
-  def createOrReadDataSet(input : String, compressedDir : String, registerAsTable : Boolean = true) : (DataFrame, DataFrame, DataFrame, DataFrame) = {
-    if (input != null && !input.isEmpty) {
+  def readDataSetFromNTriple(input : String, registerAsTable : Boolean = true) : (DataFrame, DataFrame, DataFrame, DataFrame) = {
       val rddGraph : RDD[graph.Triple] = readRDFFromFile(input)
 
       val triplesDF = convertRDDGraphToDF(rddGraph)
-      triplesDF.cache()
-
       objectDF = getDistinctObjectDictDF(rddGraph)
 
       predicateDF = getDistinctPredicateDictDF(rddGraph)
@@ -133,8 +132,16 @@ class TripleOps {
       if (registerAsTable) {
         tripleFactTable.createOrReplaceTempView(TripleOps.TRIPLE_TABLE)
       }
-    }
-    else if ( compressedDir != null && !compressedDir.isEmpty) {
+    (tripleFactTable, subjectDF, objectDF, predicateDF)
+  }
+
+  /**
+    * This is key function of TripleOps that read RDF file and create Dictionaries and Index Table and register them as Spark In memory Table
+    * @param compressedDir Input Directory Path of compressed Data [Either One of the input is require]
+    * @param registerAsTable If true, it register all the DF as Spark table
+    * @return Returns the Tuple4 [IndexDataFrame,SubjectDictDataFrame,ObjectDictDataFrame,PredicateDictDataFrame]
+    */
+  def readCompressedDataSet(compressedDir : String, registerAsTable : Boolean = true) : (DataFrame, DataFrame, DataFrame, DataFrame) = {
 
       tripleFactTable = spark.read.schema(tripleSchema).csv(compressedDir + TripleOps.TRIPLE_DIR)
       subjectDF = spark.read.schema(dictionarySchema).csv(compressedDir + TripleOps.SUBJECT_DIR)
@@ -146,10 +153,6 @@ class TripleOps {
         tripleFactTable.createOrReplaceTempView(TripleOps.TRIPLE_TABLE)
       }
 
-    }
-    else {
-      throw  new IllegalArgumentException("Input File or Compressed Directory is not provided. Please provide any one input.")
-    }
     (tripleFactTable, subjectDF, objectDF, predicateDF)
   }
 
